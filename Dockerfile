@@ -63,6 +63,7 @@ RUN set -ex \
     && pip install boto3 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql]==$AIRFLOW_VERSION \
     && pip install 'celery[redis]>=4.1.1,<4.2.0' \
+    && pip install prometheus_client \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
@@ -84,8 +85,14 @@ EXPOSE 8080 5555 8793
 USER root
 RUN groupadd --gid 999 docker \
     && usermod -aG docker airflow
+RUN apt-get update && \
+    apt-get upgrade && \
+    apt-get install -y git
 USER airflow
 RUN pip install --user docker
+
+WORKDIR ${AIRFLOW_HOME}
+RUN git clone https://github.com/epoch8/airflow-exporter plugins/prometheus_exporter
 
 WORKDIR ${AIRFLOW_HOME}
 ENTRYPOINT ["/entrypoint.sh"]
