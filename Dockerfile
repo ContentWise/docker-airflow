@@ -90,6 +90,12 @@ RUN groupadd --gid 999 docker \
 RUN apt-get update && \
     apt-get upgrade && \
     apt-get install -y git
+
+# This fixes high CPU load in airflow 1.10
+COPY config/af_1.10_high_cpu.patch /root/af_1.10_high_cpu.patch
+RUN patch -d /usr/local/lib/python3.6/site-packages/airflow/ < /root/af_1.10_high_cpu.patch; \
+    rm /root/af_1.10_high_cpu.patch
+
 USER airflow
 RUN pip install --user docker
 
