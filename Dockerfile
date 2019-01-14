@@ -33,12 +33,12 @@ RUN set -ex \
         libssl-dev \
         libffi-dev \
         libpq-dev \
-        git \
     ' \
     && apt-get update -yqq \
     && apt-get upgrade -yqq \
     && apt-get install -yqq --no-install-recommends \
         $buildDeps \
+        git \
         freetds-bin \
         build-essential \
         default-libmysqlclient-dev \
@@ -47,6 +47,7 @@ RUN set -ex \
         rsync \
         netcat \
         locales \
+        gosu \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -59,6 +60,7 @@ RUN set -ex \
     && pip install boto3 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis>=2.10.5,<3' \
+    && pip install docker \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
     && pip install prometheus_client \
     && apt-get purge --auto-remove -yqq $buildDeps \
@@ -78,15 +80,6 @@ COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
 EXPOSE 8080 5555 8793
-
-USER root
-RUN groupadd --gid 999 docker \
-    && usermod -aG docker airflow
-RUN apt-get update && \
-    apt-get upgrade && \
-    apt-get install -y git
-USER airflow
-RUN pip install --user docker
 
 WORKDIR ${AIRFLOW_HOME}
 RUN git clone https://github.com/epoch8/airflow-exporter plugins/prometheus_exporter
