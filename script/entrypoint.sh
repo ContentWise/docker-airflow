@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-set -ex
+set -x
 
 groupadd --gid ${DOCKER_GID:-999} docker -f
 usermod -aG docker airflow
 
 gosu airflow bash -s <<EOF
+
+set -x
+
 TRY_LOOP="20"
 
 : "${REDIS_HOST:="redis"}"
