@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-groupadd --gid ${DOCKER_GID:-999} docker \
-    && usermod -aG docker airflow
+set -ex
+
+groupadd --gid ${DOCKER_GID:-999} docker -f
+usermod -aG docker airflow
 
 gosu airflow bash -s <<EOF
 TRY_LOOP="20"
